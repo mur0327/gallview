@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖼️</text></svg>"
+    />
+    <title>Gallview</title>
+
+    <!-- Pretendard Font -->
+    <link
+      rel="stylesheet"
+      as="style"
+      crossorigin
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
+    />
+
+    <link rel="stylesheet" href="board.css" />
+  </head>
+
+  <body>
+    <div id="app">
+      <div id="title">
+        <h1>Gallview</h1>
+        <div class="controls-container">
+          <input id="insert-url" type="url" placeholder="DCInside 갤러리 URL을 입력하세요" />
+          <button class="btn" id="load-btn">불러오기</button>
+          <button class="btn" id="clear-btn">이미지 삭제</button>
+          <label for="column-selector">열 개수:</label>
+          <select id="column-selector">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4" selected>4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+          </select>
+        </div>
+        <!-- 프로그레스 바 -->
+        <div id="progress-container">
+          <div id="progress-bar"></div>
+        </div>
+      </div>
+
+      <div id="loading-status"></div>
+      <div id="board"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/masonry-layout@4.2.2/dist/masonry.pkgd.min.js"></script>
+    <script src="https://unpkg.com/imagesloaded@5/imagesloaded.pkgd.min.js"></script>
+    <script src="board.js"></script>
+  </body>
+</html>
