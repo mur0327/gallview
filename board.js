@@ -1,12 +1,13 @@
 const CONFIG = {
-  proxyUrl: "http://localhost:8080/", // 배포 시 실제 프록시 서버 URL로 변경
+  // config.local.js가 있으면 해당 값 사용, 없으면 기본값
+  proxyUrl: typeof LOCAL_CONFIG !== "undefined" ? LOCAL_CONFIG.proxyUrl : "http://localhost:8080/",
   dcinside: {
     baseUrl: "https://gall.dcinside.com",
     imageBaseUrl: "https://images.dcinside.com/viewimage.php",
     selectors: {
       article: {
-        regular: ".ub-content.us-post.thum .gall_tit.ub-word a:not(.reply_numbox)",
-        minor: '.ub-content.us-post[data-type="icon_pic"] .gall_tit.ub-word a:not(.reply_numbox)',
+        dcbest: ".ub-content.us-post.thum .gall_tit.ub-word a:not(.reply_numbox)",
+        gallery: '.ub-content.us-post[data-type="icon_pic"] .gall_tit.ub-word a:not(.reply_numbox)',
       },
       media: [
         {
@@ -22,8 +23,10 @@ const CONFIG = {
     },
   },
   app: {
-    maxArticlesToFetch: 20,
-    concurrentRequests: 5, // 동시 요청 제한
+    defaultArticleCount: 20,
+    maxArticleCount: 500,
+    maxPages: 100, // 무한 루프 방지
+    concurrentRequests: 5,
   },
 };
 
@@ -38,6 +41,7 @@ class ImageBoard {
     this.loadedImages = 0;
     this.msnry = null;
     this.dynamicStyleSheet = null;
+    this.dcbestParam = 1; // 기본값: 실시간 베스트
   }
 
   /**
@@ -65,6 +69,108 @@ class ImageBoard {
 
     document.getElementById("load-btn").addEventListener("click", () => this.handleLoadClick());
     document.getElementById("clear-btn").addEventListener("click", () => this.clearBoard());
+
+    // 입력 필드 유효성 검사
+    this.setupInputValidation();
+
+    // DCBest 모달 설정
+    this.setupDcbestModal();
+  }
+
+  /**
+   * DCBest 카테고리 선택 모달을 설정합니다.
+   */
+  setupDcbestModal() {
+    const modal = document.getElementById("dcbest-modal");
+    const confirmBtn = document.getElementById("modal-confirm");
+    const cancelBtn = document.getElementById("modal-cancel");
+    const overlay = modal.querySelector(".modal-overlay");
+
+    // 확인 버튼
+    confirmBtn.addEventListener("click", () => {
+      const checkboxes = modal.querySelectorAll('input[name="dcbest-cat"]:checked');
+      if (checkboxes.length === 0) {
+        this.showToast("최소 1개 이상 선택하세요");
+        return;
+      }
+      // 체크된 값 합산
+      this.dcbestParam = Array.from(checkboxes).reduce((sum, cb) => sum + parseInt(cb.value, 10), 0);
+      modal.classList.remove("show");
+      this.loadDcbest();
+    });
+
+    // 취소 버튼
+    cancelBtn.addEventListener("click", () => {
+      modal.classList.remove("show");
+      this.setLoadButtonState("idle");
+    });
+
+    // 오버레이 클릭으로 닫기
+    overlay.addEventListener("click", () => {
+      modal.classList.remove("show");
+      this.setLoadButtonState("idle");
+    });
+  }
+
+  /**
+   * 게시글 수와 시작 페이지 입력 필드에 유효성 검사를 설정합니다.
+   * blur(포커스 해제) 또는 Enter 키 입력 시 범위를 검사하고 보정합니다.
+   */
+  setupInputValidation() {
+    const articleCountInput = document.getElementById("article-count");
+    const startPageInput = document.getElementById("start-page");
+
+    const validateInput = (input, min, max) => {
+      let value = parseInt(input.value, 10);
+      if (isNaN(value) || value < min) {
+        value = min;
+        this.showToast(`최소값 ${min}으로 설정되었습니다`);
+      } else if (value > max) {
+        value = max;
+        this.showToast(`최대값 ${max}으로 설정되었습니다`);
+      }
+      input.value = value;
+    };
+
+    // 게시글 수: 1 ~ 500
+    const validateArticleCount = () => validateInput(articleCountInput, 1, CONFIG.app.maxArticleCount);
+    articleCountInput.addEventListener("blur", validateArticleCount);
+    articleCountInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") validateArticleCount();
+    });
+
+    // 시작 페이지: 1 이상
+    const validateStartPage = () => validateInput(startPageInput, 1, 9999);
+    startPageInput.addEventListener("blur", validateStartPage);
+    startPageInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") validateStartPage();
+    });
+  }
+
+  /**
+   * 토스트 알림을 표시합니다.
+   * @param {string} message - 표시할 메시지
+   * @param {number} duration - 표시 시간 (ms)
+   */
+  showToast(message, duration = 2500) {
+    // 기존 토스트 제거
+    const existing = document.querySelector(".toast");
+    if (existing) existing.remove();
+
+    const toast = document.createElement("div");
+    toast.className = "toast warning";
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    // 애니메이션을 위한 약간의 지연
+    requestAnimationFrame(() => {
+      toast.classList.add("show");
+    });
+
+    setTimeout(() => {
+      toast.classList.remove("show");
+      setTimeout(() => toast.remove(), 300);
+    }, duration);
   }
 
   /**
@@ -134,20 +240,60 @@ class ImageBoard {
    * 중복 클릭 방지, 기존 이미지 정리, 에러 핸들링을 담당합니다.
    */
   async handleLoadClick() {
-    const url = document.getElementById("insert-url").value;
-    if (!url) {
-      alert("주소를 입력하세요!");
+    const galleryId = document.getElementById("gallery-id").value.trim().toLowerCase();
+    if (!galleryId) {
+      this.showToast("갤러리 ID를 입력하세요");
       return;
     }
+
+    // dcbest면 모달 표시
+    if (galleryId === "dcbest") {
+      document.getElementById("dcbest-modal").classList.add("show");
+      return;
+    }
+
+    await this.loadGallery(galleryId);
+  }
+
+  /**
+   * DCBest 모달에서 확인 후 호출됩니다.
+   */
+  async loadDcbest() {
+    await this.loadGallery("dcbest");
+  }
+
+  /**
+   * 갤러리 데이터를 로드하는 공통 로직입니다.
+   */
+  async loadGallery(galleryId) {
+    const articleCount = Math.min(
+      Math.max(1, parseInt(document.getElementById("article-count").value, 10) || CONFIG.app.defaultArticleCount),
+      CONFIG.app.maxArticleCount
+    );
+    const startPage = Math.max(1, parseInt(document.getElementById("start-page").value, 10) || 1);
 
     this.setLoadButtonState("loading");
     this.clearBoard();
 
     try {
-      const imgBoardList = await this.fetchImageBoardData(CONFIG.proxyUrl, url);
+      const imgBoardList = await this.fetchImageBoardData(galleryId, articleCount, startPage);
       await this.renderImageBoard(imgBoardList);
     } catch (error) {
       this.setLoadButtonState("error", error.message);
+    }
+  }
+
+  /**
+   * 갤러리 ID와 페이지 번호로 목록 URL을 생성합니다.
+   * @param {string} galleryId - 갤러리 ID
+   * @param {number} page - 페이지 번호 (기본값: 1)
+   * @returns {string} 갤러리 URL
+   */
+  buildGalleryUrl(galleryId, page = 1) {
+    if (galleryId === "dcbest") {
+      return `${CONFIG.dcinside.baseUrl}/board/lists/?id=dcbest&page=${page}&_dcbest=${this.dcbestParam}`;
+    } else {
+      return `${CONFIG.dcinside.baseUrl}/mgallery/board/lists/?id=${galleryId}&page=${page}`;
     }
   }
 
@@ -164,6 +310,10 @@ class ImageBoard {
     try {
       const res = await fetch(proxyUrl + url);
       if (!res.ok) {
+        if (res.status === 404) {
+          this.showToast("올바른 갤러리 ID를 입력하세요");
+          return null;
+        }
         throw new Error(`HTTP 오류! 상태: ${res.status}`);
       }
       const text = await res.text();
@@ -187,45 +337,99 @@ class ImageBoard {
 
       return html;
     } catch (error) {
+      // 페이지 새로고침 등으로 요청이 중단된 경우 무시
+      if (error.name === "AbortError" || error.message.includes("Failed to fetch")) {
+        console.log("요청이 중단되었습니다.");
+        return null;
+      }
       throw new Error(`HTML을 가져오는 데 실패했습니다 (${url}): ${error.message}`);
     }
   }
 
   /**
-   * 갤러리 목록 페이지에서 이미지가 있는 게시글 링크를 추출합니다.
-   * 일반 갤러리와 마이너 갤러리의 HTML 구조가 다르므로
-   * URL 경로를 분석하여 적절한 셀렉터를 선택합니다.
-   * @param {string} proxyUrl - CORS 프록시 URL
-   * @param {string} url - 갤러리 목록 URL
-   * @returns {Promise<Array>} 게시글 정보 배열 [{title, url}]
+   * 갤러리 ID에 맞는 게시글 셀렉터를 반환합니다.
+   * dcbest는 별도 셀렉터, 그 외는 같은 셀렉터 사용.
+   * @param {string} galleryId - 갤러리 ID
+   * @returns {string} CSS 셀렉터
    */
-  async getArticleList(proxyUrl, url) {
-    const html = await this.getHTML(proxyUrl, url, false);
-    let selector;
-    const { pathname } = new URL(url);
-
-    if (pathname === "/board/lists/") {
-      selector = CONFIG.dcinside.selectors.article.regular;
-    } else if (pathname.startsWith("/mgallery/board/lists")) {
-      selector = CONFIG.dcinside.selectors.article.minor;
+  getArticleSelector(galleryId) {
+    if (galleryId === "dcbest") {
+      return CONFIG.dcinside.selectors.article.dcbest;
     } else {
-      throw new Error("지원하지 않는 갤러리 주소입니다. 일반 또는 마이너 갤러리의 목록 주소를 입력해주세요.");
+      return CONFIG.dcinside.selectors.article.gallery;
     }
+  }
 
+  /**
+   * HTML 문서에서 이미지가 있는 게시글 목록을 추출합니다.
+   * @param {Document} html - 파싱된 HTML
+   * @param {string} selector - 게시글 셀렉터
+   * @returns {Array} 게시글 배열 [{title, url}]
+   */
+  extractArticlesFromHTML(html, selector) {
     const articles = html.querySelectorAll(selector);
-    if (articles.length === 0) {
-      throw new Error("게시글을 찾을 수 없습니다. 갤러리 주소가 올바른지 확인해주세요.");
+    const articleList = [];
+    articles.forEach((article) => {
+      const title = article.innerText.trim();
+      const href = article.getAttribute("href");
+      articleList.push({ title, url: CONFIG.dcinside.baseUrl + href });
+    });
+    return articleList;
+  }
+
+  /**
+   * 원하는 개수의 이미지 게시글을 수집할 때까지 페이지를 순회합니다.
+   * @param {string} galleryId - 갤러리 ID
+   * @param {number} targetCount - 수집할 게시글 수
+   * @param {number} startPage - 시작 페이지
+   * @returns {Promise<Array>} 게시글 목록
+   */
+  async getArticleList(galleryId, targetCount, startPage = 1) {
+    const selector = this.getArticleSelector(galleryId);
+    const allArticles = [];
+    let currentPage = startPage;
+    let emptyPageCount = 0;
+    let isFirstPage = true;
+
+    while (allArticles.length < targetCount && currentPage < startPage + CONFIG.app.maxPages) {
+      const targetUrl = this.buildGalleryUrl(galleryId, currentPage);
+      console.log(`페이지 ${currentPage} 조회 중...`);
+
+      const html = await this.getHTML(CONFIG.proxyUrl, targetUrl, false);
+
+      // 요청 중단 또는 404 - 첫 페이지면 조용히 종료 (토스트 이미 표시됨)
+      if (!html) {
+        if (isFirstPage) return [];
+        break;
+      }
+
+      isFirstPage = false;
+      const pageArticles = this.extractArticlesFromHTML(html, selector);
+
+      if (pageArticles.length === 0) {
+        emptyPageCount++;
+        // 연속 3페이지 빈 페이지면 종료 (마지막 도달)
+        if (emptyPageCount >= 3) {
+          console.log("더 이상 게시글이 없습니다.");
+          break;
+        }
+      } else {
+        emptyPageCount = 0;
+        // 필요한 만큼만 추가
+        const remaining = targetCount - allArticles.length;
+        allArticles.push(...pageArticles.slice(0, remaining));
+        console.log(`페이지 ${currentPage}: ${pageArticles.length}개 발견, 총 ${allArticles.length}/${targetCount}개`);
+      }
+
+      currentPage++;
     }
 
-    const articleList = [];
-    for (let i = 0; i < CONFIG.app.maxArticlesToFetch; i++) {
-      if (i >= articles.length) break;
-      const title = articles[i].innerText.trim();
-      const href = articles[i].getAttribute("href");
-      articleList.push({ title: title, url: CONFIG.dcinside.baseUrl + href });
+    if (allArticles.length === 0) {
+      throw new Error("이미지가 있는 게시글을 찾을 수 없습니다.");
     }
-    console.log("가져온 게시글 목록:", articleList);
-    return articleList;
+
+    console.log("가져온 게시글 목록:", allArticles);
+    return allArticles;
   }
 
   /**
@@ -259,6 +463,10 @@ class ImageBoard {
         chunk.map(async (article) => {
           console.log(`게시글 처리 중: ${article.title}`);
           const html = await this.getHTML(proxyUrl, article.url, true);
+
+          // 요청 중단 시 빈 mediaList 반환
+          if (!html) return { ...article, mediaList: [] };
+
           const mediaList = [];
           CONFIG.dcinside.selectors.media.forEach(({ selector, attr }) => {
             const elements = html.querySelectorAll(selector);
@@ -287,11 +495,13 @@ class ImageBoard {
 
   /**
    * 게시글 목록 가져오기 → 미디어 URL 추출을 순차적으로 수행합니다.
-   * 데이터 수집 파이프라인의 진입점입니다.
+   * @param {string} galleryId - 갤러리 ID
+   * @param {number} articleCount - 수집할 게시글 수
+   * @param {number} startPage - 시작 페이지
    */
-  async fetchImageBoardData(proxyUrl, url) {
-    const articleList = await this.getArticleList(proxyUrl, url);
-    const imgBoardList = await this.getMediaList(proxyUrl, articleList);
+  async fetchImageBoardData(galleryId, articleCount, startPage) {
+    const articleList = await this.getArticleList(galleryId, articleCount, startPage);
+    const imgBoardList = await this.getMediaList(CONFIG.proxyUrl, articleList);
     console.log("최종 이미지 보드 데이터:", imgBoardList);
     return imgBoardList;
   }
