@@ -7,18 +7,16 @@ dcinside 갤러리의 이미지를 Masonry 레이아웃으로 보여주는 이�
 - 🖼️ dcinside 갤러리 이미지 수집 및 표시
 - 📐 Masonry 레이아웃 (Pinterest 스타일)
 - 🔢 1~8열 동적 컬럼 조절
-- 📊 프로그레스 바 로딩 상태 표시
+- 📊 페이지네이션 (게시글 수, 시작 페이지 지정)
 - 🏷️ 호버 시 게시글 제목 표시
-- 📱 반응형 디자인
+- 🌟 DCBest 카테고리 선택 (실베/라이트/나이트)
 
 ## 🚀 사용법
 
 1. `board.html`을 브라우저에서 열기
-2. dcinside 갤러리 URL 입력
-   - 일반 갤러리: `https://gall.dcinside.com/board/lists/?id=갤러리ID`
-   - 마이너 갤러리: `https://gall.dcinside.com/mgallery/board/lists/?id=갤러리ID`
-   - 추가 쿼리 가능: `&list_num=50&page=2` 등
-3. "불러오기" 클릭
+2. 갤러리 ID 입력 (예: `programming`, `dcbest`)
+3. 게시글 수, 시작 페이지 설정 (기본값: 20, 1)
+4. "불러오기" 클릭
 
 ## 🛠️ 기술 스택
 
@@ -31,40 +29,32 @@ dcinside 갤러리의 이미지를 Masonry 레이아웃으로 보여주는 이�
 
 ```
 Gallview/
-├── board.html    # 메인 HTML
-├── board.css     # 스타일시트
-├── board.js      # 메인 로직
-├── server.js     # CORS 프록시 서버
-├── package.json  # Node.js 의존성
+├── board.html              # 메인 HTML
+├── board.css               # 스타일시트
+├── board.js                # 메인 로직
+├── config.local.example.js # 설정 템플릿
+├── server.js               # CORS 프록시 서버
+├── package.json            # Node.js 의존성
 └── README.md
 ```
 
-## 🔧 프록시 서버 설정
+## 🔧 설정
 
-dcinside 이미지를 가져오려면 CORS 프록시 서버가 필요합니다.
+### 프록시 URL 설정
 
-### 로컬 실행
-
-```bash
-# 의존성 설치
-npm install
-
-# 프록시 서버 실행 (기본 포트: 8080)
-npm start
-```
-
-## ⚙️ 설정
-
-`board.js`의 `CONFIG` 객체에서 설정 변경 가능:
+`config.local.example.js`를 복사하여 `config.local.js` 생성 후 수정:
 
 ```javascript
-const CONFIG = {
-  proxyUrl: 'http://localhost:8080/', // 배포 시 실제 프록시 서버 URL로 변경
-  app: {
-    maxArticlesToFetch: 20,  // 가져올 게시글 수
-    concurrentRequests: 5,   // 동시 요청 수
-  },
+const LOCAL_CONFIG = {
+  proxyUrl: "https://your-domain.com/proxy/",
 };
+```
+
+### 로컬 프록시 서버 실행
+
+```bash
+npm install
+npm start  # http://localhost:8080
 ```
 
 ## ⚠️ 주의사항
