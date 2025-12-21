@@ -25,7 +25,15 @@
       <div id="title">
         <h1>Gallview</h1>
         <div class="controls-container">
-          <input id="insert-url" type="url" placeholder="dcinside 갤러리 URL을 입력하세요" />
+          <input id="gallery-id" type="text" placeholder="갤러리 ID (예: dcbest)" />
+          <div class="input-group">
+            <label for="article-count">게시글 수:</label>
+            <input id="article-count" type="number" value="20" min="1" max="500" />
+          </div>
+          <div class="input-group">
+            <label for="start-page">시작 페이지:</label>
+            <input id="start-page" type="number" value="1" min="1" />
+          </div>
           <button class="btn" id="load-btn">불러오기</button>
           <button class="btn" id="clear-btn">이미지 삭제</button>
           <label for="column-selector">열 개수:</label>
@@ -48,6 +56,32 @@
 
       <div id="loading-status"></div>
       <div id="board"></div>
+
+      <!-- DCBest 카테고리 모달 -->
+      <div id="dcbest-modal" class="modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+          <h3>실베 카테고리 선택</h3>
+          <div class="modal-checkboxes">
+            <label class="checkbox-label">
+              <input type="checkbox" name="dcbest-cat" value="1" checked />
+              <span>실시간 베스트</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="dcbest-cat" value="3" />
+              <span>실베라이트</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="dcbest-cat" value="5" />
+              <span>실베나이트</span>
+            </label>
+          </div>
+          <div class="modal-buttons">
+            <button class="btn" id="modal-confirm">확인</button>
+            <button class="btn" id="modal-cancel">취소</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/masonry-layout@4.2.2/dist/masonry.pkgd.min.js"></script>
