@@ -1,5 +1,5 @@
 const CONFIG = {
-  proxyUrl: "https://cors-anywhere.uiram.com/",
+  proxyUrl: "http://localhost:8080/", // 배포 시 실제 프록시 서버 URL로 변경
   dcinside: {
     baseUrl: "https://gall.dcinside.com",
     imageBaseUrl: "https://images.dcinside.com/viewimage.php",
