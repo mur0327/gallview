@@ -2,11 +2,9 @@
 
 dcinside 갤러리의 이미지를 Masonry 레이아웃으로 보여주는 이미지 뷰어입니다.
 
-![preview](https://img.shields.io/badge/demo-live-brightgreen)
-
 ## ✨ 기능
 
-- 🖼️ DCInside 갤러리 이미지 수집 및 표시
+- 🖼️ dcinside 갤러리 이미지 수집 및 표시
 - 📐 Masonry 레이아웃 (Pinterest 스타일)
 - 🔢 1~8열 동적 컬럼 조절
 - 📊 프로그레스 바 로딩 상태 표시
@@ -36,7 +34,23 @@ Gallview/
 ├── board.html    # 메인 HTML
 ├── board.css     # 스타일시트
 ├── board.js      # 메인 로직
+├── server.js     # CORS 프록시 서버
+├── package.json  # Node.js 의존성
 └── README.md
+```
+
+## 🔧 프록시 서버 설정
+
+dcinside 이미지를 가져오려면 CORS 프록시 서버가 필요합니다.
+
+### 로컬 실행
+
+```bash
+# 의존성 설치
+npm install
+
+# 프록시 서버 실행 (기본 포트: 8080)
+npm start
 ```
 
 ## ⚙️ 설정
@@ -45,7 +59,7 @@ Gallview/
 
 ```javascript
 const CONFIG = {
-  proxyUrl: 'https://cors-anywhere.uiram.com/',
+  proxyUrl: 'http://localhost:8080/', // 배포 시 실제 프록시 서버 URL로 변경
   app: {
     maxArticlesToFetch: 20,  // 가져올 게시글 수
     concurrentRequests: 5,   // 동시 요청 수
