@@ -3,13 +3,16 @@
   "name": "Gallview",
   "version": "1.0.0",
   "description": "dcinside/arcalive 갤러리 이미지 뷰어",
-  "permissions": ["activeTab", "tabs", "scripting"],
+  "permissions": ["activeTab", "tabs", "scripting", "contextMenus"],
   "host_permissions": [
     "https://gall.dcinside.com/*",
     "https://arca.live/*",
     "https://images.dcinside.com/*",
     "https://*.namu.la/*"
   ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "action": {
     "default_popup": "popup/popup.html",
     "default_icon": {
