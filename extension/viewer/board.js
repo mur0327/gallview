@@ -276,6 +276,7 @@ class ImageBoard {
     console.log(`  게시글 수: ${articleCount}`);
     console.log(`  시작 페이지: ${startPage}`);
     console.log(`  말머리: ${this.category === "" ? "전체" : this.category}`);
+    console.log(`  개념글만: ${this.recommendOnly ? "예" : "아니오"}`);
     if (id === "dcbest") {
       console.log(`  DCBest 카테고리: ${this.dcbestParam}`);
     }
