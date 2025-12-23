@@ -346,13 +346,18 @@ class ImageBoard {
     const group = document.createElement("div");
     group.className = "head-group";
 
-    // "전체" 옵션
-    const isAllSelected = this.category === "";
-    group.appendChild(createOption("", "전체", isAllSelected));
+    // "전체" 옵션 (디시인사이드만 - 아카라이브는 첫 번째 카테고리가 이미 전체)
+    if (this.currentSite === "dcinside") {
+      const isAllSelected = this.category === "";
+      group.appendChild(createOption("", "전체", isAllSelected));
+    }
 
     // 모든 말머리 추가
     heads.forEach((h) => {
-      const isChecked = this.category === h.id;
+      const isChecked =
+        this.currentSite === "arcalive" && this.category === ""
+          ? h === heads[0] // 아카라이브: 첫 번째 옵션이 기본 선택
+          : this.category === h.id;
       group.appendChild(createOption(h.id, h.name, isChecked));
     });
 
