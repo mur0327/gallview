@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖼️</text></svg>"
+    />
+    <title>Gallview</title>
+
+    <!-- Pretendard Font -->
+    <link
+      rel="stylesheet"
+      as="style"
+      crossorigin
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
+    />
+
+    <link rel="stylesheet" href="board.css" />
+  </head>
+
+  <body>
+    <div id="app">
+      <div id="title">
+        <h1>Gallview</h1>
+        <!-- 통합 컨트롤 영역 -->
+        <div class="controls-row">
+          <div class="site-selector">
+            <label class="site-radio">
+              <input type="radio" name="site" value="dcinside" checked />
+              <span>디시인사이드</span>
+            </label>
+            <label class="site-radio">
+              <input type="radio" name="site" value="arcalive" />
+              <span>아카라이브</span>
+            </label>
+          </div>
+
+          <div class="input-group">
+            <span class="label-text">ID:</span>
+            <input id="board-id" type="text" placeholder="갤러리/채널 ID" />
+          </div>
+
+          <div class="input-group">
+            <span class="label-text">게시글:</span>
+            <input id="article-count" type="number" value="20" min="1" max="500" />
+          </div>
+
+          <div class="input-group">
+            <span class="label-text">페이지:</span>
+            <input id="start-page" type="number" value="1" min="1" />
+          </div>
+
+          <button class="btn" id="load-btn">불러오기</button>
+
+          <div class="divider"></div>
+
+          <div class="select-wrapper">
+            <select id="column-selector">
+              <option value="1">1열</option>
+              <option value="2">2열</option>
+              <option value="3">3열</option>
+              <option value="4" selected>4열</option>
+              <option value="5">5열</option>
+              <option value="6">6열</option>
+              <option value="7">7열</option>
+              <option value="8">8열</option>
+            </select>
+            <span class="select-arrow">▼</span>
+          </div>
+
+          <button class="btn" id="clear-btn">이미지 삭제</button>
+        </div>
+        <!-- 프로그레스 바 -->
+        <div id="progress-container">
+          <div id="progress-bar"></div>
+        </div>
+      </div>
+
+      <div id="loading-status"></div>
+      <div id="board-wrapper">
+        <div id="board">
+          <!-- Masonry columnWidth 셀렉터용 (공식 권장) -->
+          <div class="grid-sizer"></div>
+        </div>
+      </div>
+
+      <!-- DCBest 카테고리 모달 -->
+      <div id="dcbest-modal" class="modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+          <h3>실베 카테고리 선택</h3>
+          <div class="modal-checkboxes">
+            <label class="checkbox-label">
+              <input type="checkbox" name="dcbest-cat" value="1" checked />
+              <span>실시간 베스트</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="dcbest-cat" value="3" />
+              <span>실베라이트</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="dcbest-cat" value="5" />
+              <span>실베나이트</span>
+            </label>
+          </div>
+          <div class="modal-buttons">
+            <button class="btn" id="modal-confirm">확인</button>
+            <button class="btn" id="modal-cancel">취소</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 말머리 선택 모달 -->
+      <div id="head-modal" class="modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content head-modal-content">
+          <h3>말머리 선택</h3>
+          <div id="head-modal-loading" class="modal-loading">
+            <span>말머리 불러오는 중...</span>
+          </div>
+          <div id="head-modal-options" class="modal-options">
+            <!-- 동적으로 채워짐 -->
+          </div>
+          <div class="modal-buttons">
+            <button class="btn" id="head-modal-confirm">확인</button>
+            <button class="btn" id="head-modal-cancel">취소</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/masonry-layout@4.2.2/dist/masonry.pkgd.min.js"></script>
+    <script src="https://unpkg.com/imagesloaded@5/imagesloaded.pkgd.min.js"></script>
+    <!-- 로컬 설정 (없으면 무시됨) -->
+    <script src="../config.local.js" onerror="console.log('config.local.js 없음, 기본값 사용')"></script>
+    <script src="board.js"></script>
+  </body>
+</html>
