@@ -174,8 +174,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       const heads = results[0].result || [];
 
-      // Dropdown 채우기
-      headSelect.innerHTML = '<option value="">전체</option>';
+      // Dropdown 채우기 (디시인사이드만 기본 전체 옵션 추가 - 아카라이브는 첫 번째가 이미 전체)
+      headSelect.innerHTML = site === "dcinside" ? '<option value="">전체</option>' : "";
       if (heads.length === 0) {
         const option = document.createElement("option");
         option.text = "말머리 없음";
