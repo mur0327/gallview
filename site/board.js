@@ -475,7 +475,7 @@ class ImageBoard {
       statusEl.textContent = `총 ${this.totalImages}개 중 ${this.loadedImages}개 로드 완료`;
 
       // 프로그레스 바 업데이트
-      progressContainer.style.display = "block";
+      progressContainer.classList.add("show");
       const percentage = (this.loadedImages / this.totalImages) * 100;
       progressBar.style.width = `${percentage}%`;
 
@@ -484,13 +484,13 @@ class ImageBoard {
         statusEl.textContent = "로딩 완료 ✅";
         setTimeout(() => {
           statusEl.style.display = "none";
-          progressContainer.style.display = "none";
+          progressContainer.classList.remove("show");
           progressBar.style.width = "0%";
         }, 3000);
       }
     } else {
       statusEl.style.display = "none";
-      progressContainer.style.display = "none";
+      progressContainer.classList.remove("show");
       progressBar.style.width = "0%";
     }
   }
