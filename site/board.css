@@ -177,6 +177,29 @@ body {
   font-weight: 500;
 }
 
+/* ===== 개념글만 체크박스 ===== */
+.recommend-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  transition: var(--transition);
+}
+
+.recommend-checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.recommend-checkbox input[type="checkbox"]:checked + span {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
 /* ===== 입력 그룹 ===== */
 .input-group {
   display: flex;

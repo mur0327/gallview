@@ -62,7 +62,8 @@ class ImageBoard {
     this.dcbestParam = 1; // 기본값: 실시간 베스트
     this.category = ""; // 말머리/카테고리 필터 ID (빈 문자열 = 전체)
     this.categoryName = ""; // 말머리/카테고리 필터 이름
-    this.currentSite = "dcinside"; // "dcinside" | "arcalive"
+    this.currentSite = "dcinside"; // 디시인사이드만 지원
+    this.recommendOnly = false; // 개념글만 필터
   }
 
   /**
@@ -496,6 +497,9 @@ class ImageBoard {
     // 현재 사이트 설정
     this.currentSite = this.getCurrentSite();
 
+    // 개념글만 체크박스 상태 저장
+    this.recommendOnly = document.getElementById("recommend-only").checked;
+
     // DCInside dcbest면 dcbest 모달 표시
     if (this.currentSite === "dcinside" && id === "dcbest") {
       document.getElementById("dcbest-modal").classList.add("show");
@@ -550,14 +554,12 @@ class ImageBoard {
 
   /**
    * 사이트별 게시글 목록 URL을 생성합니다.
-   * DCInside는 "갤러리", Arca.live는 "채널"이라는 명칭을 사용하므로
-   * 포괄적인 이름 사용.
    * @param {string} id - 갤러리/채널 ID
    * @param {number} page - 페이지 번호 (기본값: 1)
    * @returns {string} 목록 URL
    */
   buildListUrl(id, page = 1) {
-    // DCInside
+    // dcinside
     if (this.currentSite === "dcinside") {
       if (id === "dcbest") {
         return `${CONFIG.dcinside.baseUrl}/board/lists/?id=dcbest&page=${page}&_dcbest=${this.dcbestParam}`;
@@ -566,17 +568,24 @@ class ImageBoard {
       if (this.category !== "") {
         url += `&sort_type=N&search_head=${this.category}`;
       }
+      if (this.recommendOnly) {
+        url += `&exception_mode=recommend`;
+      }
       return url;
     }
 
-    // Arca.live (파라미터 순서: category → p)
+    // arcalive (파라미터 순서: category → mode → p)
     if (this.currentSite === "arcalive") {
       let url = `${CONFIG.arcalive.baseUrl}/b/${id}`;
+      const params = [];
       if (this.category !== "") {
-        url += `?category=${encodeURIComponent(this.category)}&p=${page}`;
-      } else {
-        url += `?p=${page}`;
+        params.push(`category=${encodeURIComponent(this.category)}`);
       }
+      if (this.recommendOnly) {
+        params.push(`mode=best`);
+      }
+      params.push(`p=${page}`);
+      url += `?${params.join("&")}`;
       return url;
     }
 
