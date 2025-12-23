@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     siteBadge.textContent = site === "dcinside" ? "디시인사이드" : "아카라이브";
     boardIdInput.value = id;
     loadBtn.disabled = false;
-    setStatus("갤러리가 감지되었습니다.");
+    setStatus("갤러리가 감지되었습니다.", "success");
 
     // DCBest 감지 시 UI 표시
     if (id === "dcbest") {
@@ -41,8 +41,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   } else {
     siteBadge.textContent = "지원하지 않는 페이지";
     boardIdInput.value = "";
+    boardIdInput.disabled = true;
     loadBtn.disabled = true;
-    setStatus("갤러리/채널 페이지에서 실행해주세요.");
+    document.getElementById("article-count").disabled = true;
+    document.getElementById("start-page").disabled = true;
+    setStatus("갤러리/채널 페이지에서 실행해주세요.", "warning");
   }
 
   // 입력 필드 유효성 검사
@@ -62,15 +65,16 @@ document.addEventListener("DOMContentLoaded", async () => {
       let value = parseInt(input.value, 10);
       if (isNaN(value)) {
         value = defaultValue;
-        setStatus(`기본값 ${defaultValue}(으)로 설정되었습니다.`);
+        setStatus(`기본값 ${defaultValue}(으)로 설정되었습니다.`, "warning");
       } else if (value < min) {
         value = min;
-        setStatus(`최솟값 ${min}으로 설정되었습니다.`);
+        setStatus(`최솟값은 ${min}입니다.`, "warning");
       } else if (value > max) {
         value = max;
-        setStatus(`최댓값 ${max}으로 설정되었습니다.`);
-      } else {
-        setStatus("사이트가 감지되었습니다."); // 정상 범위일 때 메시지 초기화
+        setStatus(`최댓값은 ${max}입니다.`, "warning");
+      } else if (site && id) {
+        // 사이트가 감지된 경우에만 상태 메시지 초기화
+        setStatus("갤러리/채널이 감지되었습니다.", "success");
       }
       input.value = value;
     };
@@ -230,7 +234,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     return heads;
   }
 
-  function setStatus(msg) {
+  function setStatus(msg, type = "normal") {
     statusMsg.textContent = msg;
+    statusMsg.classList.toggle("warning", type === "warning");
+    statusMsg.classList.toggle("success", type === "success");
   }
 });
