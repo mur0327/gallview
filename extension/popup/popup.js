@@ -70,7 +70,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         value = max;
         setStatus(`최댓값 ${max}으로 설정되었습니다.`);
       } else {
-        setStatus("갤러리가 감지되었습니다."); // 정상 범위일 때 메시지 초기화
+        setStatus("사이트가 감지되었습니다."); // 정상 범위일 때 메시지 초기화
       }
       input.value = value;
     };
