@@ -45,6 +45,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     loadBtn.disabled = true;
     document.getElementById("article-count").disabled = true;
     document.getElementById("start-page").disabled = true;
+    document.getElementById("recommend-only").disabled = true;
+    document.querySelector(".recommend-checkbox").classList.add("disabled");
     setStatus("갤러리/채널 페이지에서 실행해주세요.", "warning");
   }
 
