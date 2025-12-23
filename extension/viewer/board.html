@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖼️</text></svg>"
+    />
+    <title>Gallview</title>
+
+    <!-- Pretendard Font -->
+    <link
+      rel="stylesheet"
+      as="style"
+      crossorigin
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
+    />
+
+    <link rel="stylesheet" href="board.css" />
+  </head>
+
+  <body>
+    <div id="app">
+      <div id="title">
+        <h1>Gallview</h1>
+        <!-- 통합 컨트롤 영역 -->
+        <div class="controls-row">
+          <span id="site-badge" class="badge">-</span>
+
+          <div class="input-group">
+            <span class="label-text">ID:</span>
+            <input id="board-id" type="text" value="-" readonly class="readonly-input" />
+          </div>
+
+          <div class="input-group">
+            <span class="label-text">게시글:</span>
+            <input id="article-count" type="text" value="-" readonly class="readonly-input small" />
+          </div>
+
+          <div class="input-group">
+            <span class="label-text">페이지:</span>
+            <input id="start-page" type="text" value="-" readonly class="readonly-input small" />
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="select-wrapper">
+            <select id="column-selector">
+              <option value="1">1열</option>
+              <option value="2">2열</option>
+              <option value="3">3열</option>
+              <option value="4" selected>4열</option>
+              <option value="5">5열</option>
+              <option value="6">6열</option>
+              <option value="7">7열</option>
+              <option value="8">8열</option>
+            </select>
+            <span class="select-arrow">▼</span>
+          </div>
+
+          <button class="btn" id="clear-btn">이미지 삭제</button>
+        </div>
+        <!-- 프로그레스 바 -->
+        <div id="progress-container">
+          <div id="progress-bar"></div>
+        </div>
+      </div>
+
+      <div id="loading-status"></div>
+      <div id="board-wrapper">
+        <div id="board">
+          <!-- Masonry columnWidth 셀렉터용 (공식 권장) -->
+          <div class="grid-sizer"></div>
+        </div>
+      </div>
+    </div>
+
+    <script src="../lib/masonry.pkgd.min.js"></script>
+    <script src="../lib/imagesloaded.pkgd.min.js"></script>
+    <script src="board.js"></script>
+  </body>
+</html>

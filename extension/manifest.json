@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "Gallview",
+  "version": "1.0.0",
+  "description": "dcinside/arcalive 갤러리 이미지 뷰어",
+  "permissions": ["activeTab", "tabs", "scripting"],
+  "host_permissions": [
+    "https://gall.dcinside.com/*",
+    "https://arca.live/*",
+    "https://images.dcinside.com/*",
+    "https://*.namu.la/*"
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "default_title": "Gallview"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

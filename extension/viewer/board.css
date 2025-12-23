@@ -1,0 +1,373 @@
+/* ===== CSS 변수 정의 ===== */
+:root {
+  /* 라이트모드 색상 팔레트 */
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-glass: rgba(255, 255, 255, 0.8);
+  --bg-danger: #ef4444;
+  --accent: #6366f1;
+  --accent-hover: #4f46e5;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --border-color: #e2e8f0;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --transition: all 0.2s ease;
+}
+
+/* ===== 기본 리셋 및 글로벌 스타일 ===== */
+html {
+  overflow-y: scroll;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+/* ===== 앱 컨테이너 ===== */
+#app {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* ===== 헤더 (글래스모피즘) ===== */
+#title {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  row-gap: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-color);
+  /* 자동 숨김 애니메이션 */
+  transform: translateY(0);
+  transition: transform 0.3s ease;
+}
+
+/* ===== 스크롤 시 헤더 숨김 ===== */
+#title.hidden {
+  transform: translateY(-100%);
+}
+
+#title h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.025em;
+}
+
+/* ===== 컨트롤 영역 ===== */
+.controls-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.label-text {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* ===== 세로 구분선 ===== */
+.divider {
+  width: 1px;
+  height: 24px;
+  background-color: var(--border-color);
+  margin: 0 8px;
+}
+
+/* ===== 배지 ===== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  height: 42px;
+  padding: 0 16px;
+  border-radius: var(--radius-md);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+}
+
+.badge.dc {
+  background-color: #3b4890;
+}
+
+.badge.arca {
+  background-color: #3d414d;
+}
+
+/* ===== 입력 그룹 ===== */
+.input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ===== 입력 필드 ===== */
+#board-id {
+  width: 150px;
+  text-align: left;
+}
+
+/* ===== 읽기 전용 입력 필드 ===== */
+.readonly-input {
+  height: 42px;
+  padding: 0 14px;
+  font-size: 0.9375rem;
+  background-color: #f1f5f9;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  outline: none;
+}
+
+.readonly-input.small {
+  width: 60px;
+  text-align: center;
+}
+
+/* ===== 버튼 ===== */
+.btn {
+  height: 42px;
+  padding: 0 20px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: white;
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.btn:hover {
+  background: var(--accent-hover);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+#clear-btn {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+#clear-btn:hover {
+  background: var(--bg-danger);
+  border-color: var(--bg-danger);
+  color: white;
+}
+
+/* ===== 커스텀 셀렉트 박스 ===== */
+.select-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+#column-selector {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  height: 42px;
+  padding: 0 40px 0 16px; /* 화살표 공간 확보 */
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  outline: none;
+  cursor: pointer;
+  transition: var(--transition);
+  min-width: 80px;
+}
+
+#column-selector:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+#column-selector:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+}
+
+.select-arrow {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  pointer-events: none;
+}
+
+/* ===== 프로그레스 바 ===== */
+#progress-container {
+  width: 100%;
+  max-width: 400px;
+  height: 6px;
+  background: var(--border-color);
+  border-radius: 3px;
+  overflow: hidden;
+  display: none;
+}
+
+#progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent), #a855f7);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+/* ===== 로딩 상태 ===== */
+#loading-status {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-color);
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: none;
+  z-index: 1000;
+}
+
+/* ===== 토스트 알림 ===== */
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  padding: 12px 20px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-color);
+  font-size: 0.875rem;
+  font-weight: 500;
+  z-index: 1001;
+  transform: translateX(120%);
+  transition: transform 0.3s ease;
+}
+
+.toast.show {
+  transform: translateX(0);
+}
+
+.toast.warning {
+  border-color: #f59e0b;
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+}
+
+/* ===== 이미지 보드 ===== */
+#board-wrapper {
+  padding: 20px;
+}
+
+#board {
+  padding: 0; /* 퍼센트 계산이 정확하도록 padding 없음 */
+}
+
+.grid-sizer,
+.masonry-item {
+  box-sizing: border-box;
+  /* width는 JS에서 동적으로 설정됨 */
+}
+
+/* ===== Masonry 아이템 (anchor 요소) ===== */
+.masonry-item {
+  display: block;
+  text-decoration: none;
+}
+
+.image-container {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 4px;
+  margin-bottom: 6px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: var(--transition);
+}
+
+.image-container img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: var(--radius-sm);
+}
+
+/* ===== 제목 오버레이 ===== */
+.image-overlay {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  right: 4px;
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.75);
+  color: white;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.image-container:hover .image-overlay {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ===== 반응형 ===== */
+@media (max-width: 640px) {
+  .controls-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .btn {
+    width: 100%;
+    max-width: 300px;
+  }
+}

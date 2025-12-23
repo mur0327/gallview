@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gallview</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header>
+        <h1>Gallview</h1>
+      </header>
+
+      <main>
+        <!-- 사이트/ID 정보 -->
+        <div class="info-group">
+          <div class="site-badge" id="site-badge">감지 중...</div>
+          <input type="text" id="board-id" placeholder="갤러리/채널 ID" readonly />
+        </div>
+
+        <!-- 옵션 설정 -->
+        <div class="options-grid">
+          <div class="option-item">
+            <label for="article-count">게시글 수</label>
+            <input type="number" id="article-count" value="20" min="1" max="500" />
+          </div>
+          <div class="option-item">
+            <label for="start-page">시작 페이지</label>
+            <input type="number" id="start-page" value="1" min="1" />
+          </div>
+          <div class="option-item">
+            <label for="head-select">말머리</label>
+            <select id="head-select" disabled>
+              <option value="">로딩 중...</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- DCBest 카테고리 (dcbest일 때만 표시) -->
+        <div id="dcbest-options" class="dcbest-options" style="display: none">
+          <label class="dcbest-label">실베 카테고리</label>
+          <div class="dcbest-checkboxes">
+            <label><input type="checkbox" name="dcbest-cat" value="1" checked /> 실시간 베스트</label>
+            <label><input type="checkbox" name="dcbest-cat" value="3" /> 실베라이트</label>
+            <label><input type="checkbox" name="dcbest-cat" value="5" /> 실베나이트</label>
+          </div>
+        </div>
+
+        <!-- 액션 버튼 -->
+        <button id="load-btn" class="btn-primary" disabled>이미지 불러오기</button>
+
+        <p id="status-msg" class="status-message"></p>
+      </main>
+    </div>
+    <script src="popup.js"></script>
+  </body>
+</html>
