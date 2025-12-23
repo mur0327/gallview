@@ -17,6 +17,61 @@ chrome.runtime.onInstalled.addListener(() => {
   });
 });
 
+/**
+ * URL이 게시글 목록 페이지인지 확인
+ * @returns {boolean} 목록 페이지면 true, 게시글 상세면 false
+ */
+function isListPage(url) {
+  try {
+    const parsed = new URL(url);
+
+    // dcinside: no 파라미터가 있으면 게시글 상세
+    if (parsed.hostname === "gall.dcinside.com") {
+      if (parsed.searchParams.get("no")) return false;
+      if (parsed.searchParams.get("id") === "dcbest") return false;
+      return true;
+    }
+
+    // arcalive: /b/channelId/숫자 형식이면 게시글 상세
+    if (parsed.hostname === "arca.live") {
+      const articleMatch = parsed.pathname.match(/^\/b\/[^\/]+\/(\d+)/);
+      if (articleMatch) return false;
+      return true;
+    }
+
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * 탭 URL에 따라 컨텍스트 메뉴 표시/숨김
+ */
+function updateMenuVisibility(tabId, url) {
+  const visible = isListPage(url);
+  chrome.contextMenus.update("gallview-open", { visible });
+}
+
+// 탭 활성화 시 메뉴 업데이트
+chrome.tabs.onActivated.addListener(async (activeInfo) => {
+  try {
+    const tab = await chrome.tabs.get(activeInfo.tabId);
+    if (tab.url) {
+      updateMenuVisibility(tab.id, tab.url);
+    }
+  } catch {
+    // 탭 접근 불가 시 무시
+  }
+});
+
+// 탭 URL 변경 시 메뉴 업데이트
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.url) {
+    updateMenuVisibility(tabId, changeInfo.url);
+  }
+});
+
 // 컨텍스트 메뉴 클릭 핸들러
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId !== "gallview-open") return;
@@ -35,16 +90,6 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     page = parseInt(url.searchParams.get("page"), 10) || 1;
     head = url.searchParams.get("search_head") || "";
     recommend = url.searchParams.get("exception_mode") === "recommend";
-
-    // dcbest 페이지 제외
-    if (id === "dcbest") {
-      return;
-    }
-
-    // 게시글 내부 페이지 제외 (no 파라미터가 있으면 게시글 상세)
-    if (url.searchParams.get("no")) {
-      return;
-    }
   }
 
   // arcalive 파싱
@@ -55,12 +100,6 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     page = parseInt(url.searchParams.get("p"), 10) || 1;
     head = url.searchParams.get("category") || "";
     recommend = url.searchParams.get("mode") === "best";
-
-    // 게시글 내부 페이지 제외 (/b/channelId/숫자 형식이면 게시글 상세)
-    const articleMatch = url.pathname.match(/^\/b\/[^\/]+\/(\d+)/);
-    if (articleMatch) {
-      return;
-    }
   }
 
   // 유효성 검사
