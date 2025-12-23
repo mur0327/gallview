@@ -182,6 +182,56 @@ body {
   border-color: var(--accent);
 }
 
+/* ===== 말머리 모달 ===== */
+.head-modal-content {
+  max-width: 360px;
+  width: 90%;
+}
+
+.modal-loading {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.modal-options {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 16px;
+}
+
+.head-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.head-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  font-size: 0.9375rem;
+}
+
+.head-option:hover {
+  background: var(--bg-primary);
+}
+
+.head-option input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  margin: 0;
+}
+
+.head-option input[type="radio"]:checked + span {
+  color: var(--accent);
+  font-weight: 600;
+}
+
 /* ===== 프로그레스 바 ===== */
 #progress-container {
   width: 100%;

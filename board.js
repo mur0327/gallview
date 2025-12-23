@@ -20,6 +20,11 @@ const CONFIG = {
           attr: "data-src",
         },
       ],
+      // 말머리 추출용 셀렉터
+      head: {
+        main: ".center_box .inner > ul li a",
+        more: "#subject_morelist ul li a",
+      },
     },
   },
   app: {
@@ -42,6 +47,8 @@ class ImageBoard {
     this.msnry = null;
     this.dynamicStyleSheet = null;
     this.dcbestParam = 1; // 기본값: 실시간 베스트
+    this.searchHead = ""; // 말머리 필터 ID (빈 문자열 = 전체)
+    this.searchHeadName = ""; // 말머리 필터 이름
   }
 
   /**
@@ -75,6 +82,9 @@ class ImageBoard {
 
     // DCBest 모달 설정
     this.setupDcbestModal();
+
+    // 말머리 선택 모달 설정
+    this.setupHeadModal();
   }
 
   /**
@@ -110,6 +120,155 @@ class ImageBoard {
       modal.classList.remove("show");
       this.setLoadButtonState("idle");
     });
+  }
+
+  /**
+   * 말머리 선택 모달을 설정합니다.
+   */
+  setupHeadModal() {
+    const modal = document.getElementById("head-modal");
+    const confirmBtn = document.getElementById("head-modal-confirm");
+    const cancelBtn = document.getElementById("head-modal-cancel");
+    const overlay = modal.querySelector(".modal-overlay");
+
+    // 확인 버튼 → 말머리 선택 후 갤러리 로드
+    confirmBtn.addEventListener("click", () => {
+      const selected = modal.querySelector('input[name="modal-search-head"]:checked');
+      if (selected) {
+        this.searchHead = selected.value;
+        this.searchHeadName = selected.nextElementSibling.textContent.trim();
+      }
+      modal.classList.remove("show");
+
+      // 저장된 갤러리 ID로 로드
+      const galleryId = document.getElementById("gallery-id").value.trim().toLowerCase();
+      this.loadGallery(galleryId);
+    });
+
+    // 취소 버튼
+    cancelBtn.addEventListener("click", () => {
+      modal.classList.remove("show");
+    });
+
+    // 오버레이 클릭으로 닫기
+    overlay.addEventListener("click", () => {
+      modal.classList.remove("show");
+    });
+  }
+
+  /**
+   * 말머리 선택 모달을 열고 갤러리에서 말머리를 로드합니다.
+   * @param {string} galleryId - 갤러리 ID
+   */
+  async openHeadModal(galleryId) {
+    const modal = document.getElementById("head-modal");
+    const loading = document.getElementById("head-modal-loading");
+    const options = document.getElementById("head-modal-options");
+
+    // 모달 표시 (로딩 상태)
+    modal.classList.add("show");
+    loading.style.display = "block";
+    options.style.display = "none";
+    options.innerHTML = "";
+    options.scrollTop = 0; // 스크롤 초기화
+
+    try {
+      // 갤러리 첫 페이지에서 말머리 추출
+      const targetUrl = this.buildGalleryUrl(galleryId, 1);
+      const html = await this.getHTML(CONFIG.proxyUrl, targetUrl, false);
+
+      if (!html) {
+        modal.classList.remove("show");
+        return;
+      }
+
+      const heads = this.extractHeadsFromHTML(html);
+      this.populateHeadModal(heads);
+
+      loading.style.display = "none";
+      options.style.display = "block";
+    } catch (error) {
+      console.error("말머리 로드 실패:", error);
+      this.showToast("말머리를 불러오는데 실패했습니다");
+      modal.classList.remove("show");
+    }
+  }
+
+  /**
+   * 갤러리 페이지에서 말머리 목록을 추출합니다.
+   * @param {Document} html - 파싱된 갤러리 페이지 HTML
+   * @returns {Array} 말머리 배열 [{id, name}]
+   */
+  extractHeadsFromHTML(html) {
+    const heads = [];
+    const { main, more } = CONFIG.dcinside.selectors.head;
+
+    // onclick="listSearchHead(숫자)"에서 숫자 추출
+    const extractHeadId = (onclick) => {
+      const match = onclick?.match(/listSearchHead\((\d+)\)/);
+      return match ? match[1] : null;
+    };
+
+    // 메인 말머리
+    html.querySelectorAll(main).forEach((a) => {
+      const id = extractHeadId(a.getAttribute("onclick"));
+      const name = a.textContent.trim();
+      if (id !== null && name) {
+        heads.push({ id, name });
+      }
+    });
+
+    // 더보기 말머리
+    html.querySelectorAll(more).forEach((a) => {
+      const id = extractHeadId(a.getAttribute("onclick"));
+      const name = a.textContent.trim();
+      if (id !== null && name) {
+        heads.push({ id, name });
+      }
+    });
+
+    return heads;
+  }
+
+  /**
+   * 말머리 모달 옵션을 채웁니다.
+   * @param {Array} heads - 말머리 배열 [{id, name, group}]
+   */
+  populateHeadModal(heads) {
+    const options = document.getElementById("head-modal-options");
+
+    // 말머리가 없으면 메시지 표시
+    if (heads.length === 0) {
+      options.innerHTML = '<div class="modal-loading">이 갤러리에는 말머리가 없습니다</div>';
+      return;
+    }
+
+    // 옵션 생성 함수
+    const createOption = (id, name, checked = false) => {
+      const label = document.createElement("label");
+      label.className = "head-option";
+      label.innerHTML = `
+        <input type="radio" name="modal-search-head" value="${id}" ${checked ? "checked" : ""} />
+        <span>${name}</span>
+      `;
+      return label;
+    };
+
+    // 단일 그룹에 모든 옵션 추가
+    const group = document.createElement("div");
+    group.className = "head-group";
+
+    // "전체" 옵션
+    const isAllSelected = this.searchHead === "";
+    group.appendChild(createOption("", "전체", isAllSelected));
+
+    // 모든 말머리 추가 (main + more 구분 없이)
+    heads.forEach((h) => {
+      const isChecked = this.searchHead === h.id;
+      group.appendChild(createOption(h.id, h.name, isChecked));
+    });
+
+    options.appendChild(group);
   }
 
   /**
@@ -246,13 +405,14 @@ class ImageBoard {
       return;
     }
 
-    // dcbest면 모달 표시
+    // dcbest면 dcbest 모달 표시
     if (galleryId === "dcbest") {
       document.getElementById("dcbest-modal").classList.add("show");
       return;
     }
 
-    await this.loadGallery(galleryId);
+    // 일반 갤러리면 말머리 선택 모달 표시
+    await this.openHeadModal(galleryId);
   }
 
   /**
@@ -271,6 +431,18 @@ class ImageBoard {
       CONFIG.app.maxArticleCount
     );
     const startPage = Math.max(1, parseInt(document.getElementById("start-page").value, 10) || 1);
+
+    // 설정 정보 로그
+    console.log("%c========== 크롤링 시작 ==========", "color: #4CAF50; font-weight: bold;");
+    console.log("%c📋 설정 정보", "color: #2196F3; font-weight: bold;");
+    console.log(`  갤러리 ID: ${galleryId}`);
+    console.log(`  게시글 수: ${articleCount}`);
+    console.log(`  시작 페이지: ${startPage}`);
+    console.log(`  말머리: ${this.searchHead === "" ? "전체" : `${this.searchHeadName} (${this.searchHead})`}`);
+    if (galleryId === "dcbest") {
+      console.log(`  DCBest 카테고리: ${this.dcbestParam}`);
+    }
+    console.log("");
 
     this.setLoadButtonState("loading");
     this.clearBoard();
@@ -293,7 +465,12 @@ class ImageBoard {
     if (galleryId === "dcbest") {
       return `${CONFIG.dcinside.baseUrl}/board/lists/?id=dcbest&page=${page}&_dcbest=${this.dcbestParam}`;
     } else {
-      return `${CONFIG.dcinside.baseUrl}/mgallery/board/lists/?id=${galleryId}&page=${page}`;
+      let url = `${CONFIG.dcinside.baseUrl}/mgallery/board/lists/?id=${galleryId}&page=${page}`;
+      // 말머리가 선택된 경우 파라미터 추가
+      if (this.searchHead !== "") {
+        url += `&sort_type=N&search_head=${this.searchHead}`;
+      }
+      return url;
     }
   }
 
@@ -458,10 +635,11 @@ class ImageBoard {
     const results = [];
     const chunks = this.chunkArray(articleList, CONFIG.app.concurrentRequests);
 
+    console.log("%c📷 게시글별 이미지 수집", "color: #9C27B0; font-weight: bold;");
+
     for (const chunk of chunks) {
       const chunkResults = await Promise.all(
         chunk.map(async (article) => {
-          console.log(`게시글 처리 중: ${article.title}`);
           const html = await this.getHTML(proxyUrl, article.url, true);
 
           // 요청 중단 시 빈 mediaList 반환
@@ -470,9 +648,6 @@ class ImageBoard {
           const mediaList = [];
           CONFIG.dcinside.selectors.media.forEach(({ selector, attr }) => {
             const elements = html.querySelectorAll(selector);
-            if (elements.length > 0) {
-              console.log(`${elements.length}개의 미디어 요소를 찾았습니다 (노드):`, elements);
-            }
             elements.forEach((element) => {
               const src = element.getAttribute(attr);
               if (src) {
@@ -484,9 +659,16 @@ class ImageBoard {
               }
             });
           });
+
           return { ...article, mediaList };
         })
       );
+
+      // 청크 완료 후 순서대로 로그 출력
+      chunkResults.forEach((result) => {
+        console.log(`📄 ${result.title} (${result.mediaList.length}개)`, result.url);
+      });
+
       results.push(...chunkResults);
     }
 
@@ -502,7 +684,16 @@ class ImageBoard {
   async fetchImageBoardData(galleryId, articleCount, startPage) {
     const articleList = await this.getArticleList(galleryId, articleCount, startPage);
     const imgBoardList = await this.getMediaList(CONFIG.proxyUrl, articleList);
-    console.log("최종 이미지 보드 데이터:", imgBoardList);
+
+    // 총 이미지 개수 계산 및 로그
+    const totalMedia = imgBoardList.reduce((sum, article) => sum + article.mediaList.length, 0);
+    console.log("");
+    console.log("%c========== 크롤링 완료 ==========", "color: #4CAF50; font-weight: bold;");
+    console.log("%c📊 결과 요약", "color: #FF9800; font-weight: bold;");
+    console.log(`  수집된 게시글: ${imgBoardList.length}개`);
+    console.log(`  총 이미지: ${totalMedia}개`);
+    console.log("");
+
     return imgBoardList;
   }
 
