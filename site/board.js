@@ -8,6 +8,7 @@ const CONFIG = {
       article: {
         dcbest: ".ub-content.us-post.thum .gall_tit.ub-word a:not(.reply_numbox)",
         gallery: '.ub-content.us-post[data-type="icon_pic"] .gall_tit.ub-word a:not(.reply_numbox)',
+        recommend: '.ub-content.us-post[data-type="icon_recomimg"] .gall_tit.ub-word a:not(.reply_numbox)',
       },
       media: [
         {
@@ -31,6 +32,7 @@ const CONFIG = {
     baseUrl: "https://arca.live",
     selectors: {
       article: "a.vrow:has(span.title .ion-ios-photos-outline)",
+      articleBest: "a.vrow:has(span.ion-android-star)",
       media: [
         {
           selector: ".article-body .fr-view.article-content img[src*='namu.la']:not(.arca-emoticon)",
@@ -652,12 +654,14 @@ class ImageBoard {
       if (id === "dcbest") {
         return CONFIG.dcinside.selectors.article.dcbest;
       }
-      return CONFIG.dcinside.selectors.article.gallery;
+      return this.recommendOnly
+        ? CONFIG.dcinside.selectors.article.recommend
+        : CONFIG.dcinside.selectors.article.gallery;
     }
 
     // Arca.live
     if (this.currentSite === "arcalive") {
-      return CONFIG.arcalive.selectors.article;
+      return this.recommendOnly ? CONFIG.arcalive.selectors.articleBest : CONFIG.arcalive.selectors.article;
     }
 
     return "";

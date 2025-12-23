@@ -8,6 +8,7 @@ const CONFIG = {
       article: {
         dcbest: ".ub-content.us-post.thum .gall_tit.ub-word a:not(.reply_numbox)",
         gallery: '.ub-content.us-post[data-type="icon_pic"] .gall_tit.ub-word a:not(.reply_numbox)',
+        recommend: '.ub-content.us-post[data-type="icon_recomimg"] .gall_tit.ub-word a:not(.reply_numbox)',
       },
       media: [
         {
@@ -25,7 +26,8 @@ const CONFIG = {
   arcalive: {
     baseUrl: "https://arca.live",
     selectors: {
-      article: "a.vrow:has(span.title .ion-ios-photos-outline)",
+      article: "a.vrow:has(span.ion-ios-photos-outline)",
+      articleBest: "a.vrow:has(span.ion-android-star)",
       media: [
         {
           selector: ".article-body .fr-view.article-content img[src*='namu.la']:not(.arca-emoticon)",
@@ -368,10 +370,15 @@ class ImageBoard {
    */
   getArticleSelector(id) {
     if (this.currentSite === "dcinside") {
-      return id === "dcbest" ? CONFIG.dcinside.selectors.article.dcbest : CONFIG.dcinside.selectors.article.gallery;
+      if (id === "dcbest") {
+        return CONFIG.dcinside.selectors.article.dcbest;
+      }
+      return this.recommendOnly
+        ? CONFIG.dcinside.selectors.article.recommend
+        : CONFIG.dcinside.selectors.article.gallery;
     }
     if (this.currentSite === "arcalive") {
-      return CONFIG.arcalive.selectors.article;
+      return this.recommendOnly ? CONFIG.arcalive.selectors.articleBest : CONFIG.arcalive.selectors.article;
     }
     return "";
   }
