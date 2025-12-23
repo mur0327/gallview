@@ -40,6 +40,11 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     if (id === "dcbest") {
       return;
     }
+
+    // 게시글 내부 페이지 제외 (no 파라미터가 있으면 게시글 상세)
+    if (url.searchParams.get("no")) {
+      return;
+    }
   }
 
   // arcalive 파싱
@@ -50,6 +55,12 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     page = parseInt(url.searchParams.get("p"), 10) || 1;
     head = url.searchParams.get("category") || "";
     recommend = url.searchParams.get("mode") === "best";
+
+    // 게시글 내부 페이지 제외 (/b/channelId/숫자 형식이면 게시글 상세)
+    const articleMatch = url.pathname.match(/^\/b\/[^\/]+\/(\d+)/);
+    if (articleMatch) {
+      return;
+    }
   }
 
   // 유효성 검사
