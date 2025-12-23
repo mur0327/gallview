@@ -123,6 +123,16 @@ document.addEventListener("DOMContentLoaded", async () => {
       params.append("head", head);
     }
 
+    // 개념글만 필터 파라미터 추가
+    const recommendOnly = document.getElementById("recommend-only").checked;
+    if (recommendOnly) {
+      if (site === "dcinside") {
+        params.append("recommend", "true");
+      } else if (site === "arcalive") {
+        params.append("best", "true");
+      }
+    }
+
     // DCBest 카테고리 파라미터 추가
     if (id === "dcbest") {
       const dcbestValue = Array.from(document.querySelectorAll('input[name="dcbest-cat"]:checked')).reduce(

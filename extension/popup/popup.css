@@ -81,6 +81,33 @@ header h1 {
   grid-column: span 2;
 }
 
+.head-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.head-row select {
+  flex: 1;
+}
+
+.recommend-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8125rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.recommend-checkbox input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
 .option-item {
   display: flex;
   flex-direction: column;

@@ -56,6 +56,7 @@ class ImageBoard {
     this.dcbestParam = 1;
     this.category = "";
     this.currentSite = "dcinside";
+    this.recommendOnly = false;
   }
 
   /**
@@ -147,6 +148,11 @@ class ImageBoard {
     this.category = head;
     if (dcbest) {
       this.dcbestParam = parseInt(dcbest, 10);
+    }
+
+    // 개념글만 필터
+    if (urlParams.get("recommend") === "true" || urlParams.get("best") === "true") {
+      this.recommendOnly = true;
     }
 
     // UI 업데이트
@@ -296,16 +302,23 @@ class ImageBoard {
       if (this.category !== "") {
         url += `&sort_type=N&search_head=${this.category}`;
       }
+      if (this.recommendOnly) {
+        url += `&exception_mode=recommend`;
+      }
       return url;
     }
 
     if (this.currentSite === "arcalive") {
       let url = `${CONFIG.arcalive.baseUrl}/b/${id}`;
+      const params = [];
       if (this.category !== "") {
-        url += `?category=${encodeURIComponent(this.category)}&p=${page}`;
-      } else {
-        url += `?p=${page}`;
+        params.push(`category=${encodeURIComponent(this.category)}`);
       }
+      if (this.recommendOnly) {
+        params.push(`mode=best`);
+      }
+      params.push(`p=${page}`);
+      url += `?${params.join("&")}`;
       return url;
     }
 
