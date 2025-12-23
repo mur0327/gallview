@@ -7,7 +7,10 @@ const CONFIG = {
     selectors: {
       article: {
         dcbest: ".ub-content.us-post.thum .gall_tit.ub-word a:not(.reply_numbox)",
-        gallery: '.ub-content.us-post[data-type="icon_pic"] .gall_tit.ub-word a:not(.reply_numbox)',
+        // 기본: 이미지 게시글 + 개념글 모두 포함
+        gallery:
+          '.ub-content.us-post[data-type="icon_pic"] .gall_tit.ub-word a:not(.reply_numbox), .ub-content.us-post[data-type="icon_recomimg"] .gall_tit.ub-word a:not(.reply_numbox)',
+        // 개념글만
         recommend: '.ub-content.us-post[data-type="icon_recomimg"] .gall_tit.ub-word a:not(.reply_numbox)',
       },
       media: [
@@ -26,7 +29,9 @@ const CONFIG = {
   arcalive: {
     baseUrl: "https://arca.live",
     selectors: {
-      article: "a.vrow:has(span.ion-ios-photos-outline)",
+      // 기본: 이미지 게시글 + 베스트 게시글 모두 포함
+      article: "a.vrow:has(span.ion-ios-photos-outline), a.vrow:has(span.ion-android-star)",
+      // 베스트만
       articleBest: "a.vrow:has(span.ion-android-star)",
       media: [
         {
