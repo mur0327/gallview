@@ -1,6 +1,7 @@
 # Gallview
 
 dcinside 갤러리와 arcalive 채널의 이미지를 Masonry 레이아웃으로 모아보는 이미지 뷰어입니다.
+
 **웹 사이트(Web)** 방식과 **크롬 확장 프로그램(Extension)** 방식을 모두 지원합니다.
 
 ## ✨ 기능
