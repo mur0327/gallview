@@ -230,48 +230,65 @@ body {
   pointer-events: none;
 }
 
-/* ===== 프로그레스 바 ===== */
-#progress-container {
-  width: 100%;
-  max-width: 400px;
-  height: 6px;
-  background: var(--border-color);
-  border-radius: 3px;
-  overflow: hidden;
-  /* 레이아웃 이동 방지: display:none 대신 visibility/opacity 사용 */
-  visibility: hidden;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-#progress-container.show {
-  visibility: visible;
-  opacity: 1;
-}
-
-#progress-bar {
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, var(--accent), #a855f7);
-  border-radius: 3px;
-  transition: width 0.3s ease;
-}
-
-/* ===== 로딩 상태 ===== */
-#loading-status {
+/* ===== 프로그레스 토스트 (통합형) ===== */
+.progress-toast {
   position: fixed;
   top: 20px;
   right: 20px;
+  min-width: 280px;
   background: var(--bg-secondary);
-  color: var(--text-primary);
-  padding: 10px 16px;
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
   border: 1px solid var(--border-color);
+  z-index: 1000;
+  overflow: hidden;
+  transform: translateX(120%);
+  transition: transform 0.3s ease;
+}
+
+.progress-toast.show {
+  transform: translateX(0);
+}
+
+.progress-toast-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
   font-size: 0.875rem;
   font-weight: 500;
-  display: none;
-  z-index: 1000;
+  color: var(--text-primary);
+}
+
+/* 스피너 애니메이션 */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border-color);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 체크 아이콘 (완료 시) */
+.check-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+/* 프로그레스 바 (토스트 하단) */
+.progress-toast-bar {
+  height: 4px;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent), #a855f7);
+  transition: width 0.3s ease;
 }
 
 /* ===== 토스트 알림 ===== */

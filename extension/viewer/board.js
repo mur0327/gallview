@@ -239,44 +239,82 @@ class ImageBoard {
   }
 
   /**
-   * 로딩 상태 업데이트
-   * @param {string} message - 커스텀 메시지 (없으면 진행률 표시)
+   * 프로그레스 토스트 생성/가져오기
    */
-  updateLoadingStatus(message = null) {
-    const statusEl = document.getElementById("loading-status");
-    const progressContainer = document.getElementById("progress-container");
-    const progressBar = document.getElementById("progress-bar");
+  getProgressToast() {
+    let toast = document.querySelector(".progress-toast");
+    if (!toast) {
+      toast = document.createElement("div");
+      toast.className = "progress-toast";
+      toast.innerHTML = `
+        <div class="progress-toast-content">
+          <div class="spinner"></div>
+          <span class="progress-text"></span>
+        </div>
+        <div class="progress-toast-bar"></div>
+      `;
+      document.body.appendChild(toast);
+    }
+    return toast;
+  }
 
-    // 커스텀 메시지가 있으면 표시 (수집 단계)
-    if (message) {
-      statusEl.style.display = "block";
-      statusEl.textContent = message;
-      progressContainer.classList.remove("show");
-      progressBar.style.width = "0%";
+  /**
+   * 로딩 상태 업데이트 (프로그레스 토스트)
+   * @param {string} message - 표시할 메시지
+   * @param {number} progress - 진행률 (0-100), null이면 프로그레스 바 숨김
+   * @param {boolean} isComplete - 완료 상태 여부
+   */
+  updateLoadingStatus(message = null, progress = null, isComplete = false) {
+    const toast = this.getProgressToast();
+    const textEl = toast.querySelector(".progress-text");
+    const barEl = toast.querySelector(".progress-toast-bar");
+    const spinnerEl = toast.querySelector(".spinner");
+
+    if (!message) {
+      // 메시지 없으면 토스트 숨김
+      toast.classList.remove("show");
       return;
     }
 
-    // 이미지 로딩 진행률 표시
-    if (this.totalImages > 0) {
-      statusEl.style.display = "block";
-      statusEl.textContent = `총 ${this.totalImages}개 중 ${this.loadedImages}개 로드 완료`;
+    // 토스트 표시
+    toast.classList.add("show");
+    textEl.textContent = message;
 
-      progressContainer.classList.add("show");
-      const percentage = (this.loadedImages / this.totalImages) * 100;
-      progressBar.style.width = `${percentage}%`;
-
-      if (this.loadedImages === this.totalImages) {
-        statusEl.textContent = "로딩 완료 ✅";
-        setTimeout(() => {
-          statusEl.style.display = "none";
-          progressContainer.classList.remove("show");
-          progressBar.style.width = "0%";
-        }, 3000);
+    // 완료 상태
+    if (isComplete) {
+      spinnerEl.style.display = "none";
+      // 체크 아이콘으로 교체
+      if (!toast.querySelector(".check-icon")) {
+        const checkIcon = document.createElement("span");
+        checkIcon.className = "check-icon";
+        checkIcon.textContent = "✅";
+        spinnerEl.parentNode.insertBefore(checkIcon, spinnerEl);
       }
+      barEl.style.width = "100%";
+
+      // 3초 후 숨김
+      setTimeout(() => {
+        toast.classList.remove("show");
+        // 다음 사용을 위해 스피너 복원
+        setTimeout(() => {
+          spinnerEl.style.display = "";
+          const checkIcon = toast.querySelector(".check-icon");
+          if (checkIcon) checkIcon.remove();
+          barEl.style.width = "0%";
+        }, 300);
+      }, 3000);
+      return;
+    }
+
+    // 진행 중 상태
+    spinnerEl.style.display = "";
+    const checkIcon = toast.querySelector(".check-icon");
+    if (checkIcon) checkIcon.remove();
+
+    if (progress !== null) {
+      barEl.style.width = `${progress}%`;
     } else {
-      statusEl.style.display = "none";
-      progressContainer.classList.remove("show");
-      progressBar.style.width = "0%";
+      barEl.style.width = "0%";
     }
   }
 
@@ -495,6 +533,8 @@ class ImageBoard {
   async getMediaList(articleList) {
     const results = [];
     const chunks = this.chunkArray(articleList, CONFIG.app.concurrentRequests);
+    const totalArticles = articleList.length;
+    let processedArticles = 0;
 
     console.log("%c📷 게시글별 이미지 수집", "color: #9C27B0; font-weight: bold;");
 
@@ -541,9 +581,14 @@ class ImageBoard {
       );
 
       chunkResults.forEach((result) => {
+        processedArticles++;
         console.log(`📄 ${result.title} (${result.mediaList.length}개)`);
         console.log(result.url);
       });
+
+      // 진행률 업데이트
+      const progress = (processedArticles / totalArticles) * 100;
+      this.updateLoadingStatus(`📷 이미지 수집 중... (${processedArticles}/${totalArticles})`, progress);
 
       results.push(...chunkResults);
     }
@@ -557,8 +602,7 @@ class ImageBoard {
   async fetchImageBoardData(galleryId, articleCount, startPage) {
     const articleList = await this.getArticleList(galleryId, articleCount, startPage);
 
-    // 이미지 URL 수집 단계 표시
-    this.updateLoadingStatus(`📷 ${articleList.length}개 게시글에서 이미지 수집 중...`);
+    // getMediaList 내부에서 진행률 표시
     const imgBoardList = await this.getMediaList(articleList);
 
     const totalMedia = imgBoardList.reduce((sum, article) => sum + article.mediaList.length, 0);
@@ -653,12 +697,15 @@ class ImageBoard {
     const board = document.getElementById("board");
     this.totalImages = imgBoardList.reduce((sum, article) => sum + article.mediaList.length, 0);
     this.loadedImages = 0;
-    this.updateLoadingStatus();
 
     if (this.totalImages === 0) {
+      this.updateLoadingStatus();
       this.showToast("이미지가 없습니다.");
       return;
     }
+
+    // 초기 상태 표시
+    this.updateLoadingStatus(`🖼️ 이미지 로드 중... (0/${this.totalImages})`, 0);
 
     const allImages = [];
     imgBoardList.forEach((article) => {
@@ -674,13 +721,15 @@ class ImageBoard {
         this.createImageCard(article, image)
           .then((card) => {
             this.loadedImages++;
-            this.updateLoadingStatus();
+            const progress = (this.loadedImages / this.totalImages) * 100;
+            this.updateLoadingStatus(`🖼️ 이미지 로드 중... (${this.loadedImages}/${this.totalImages})`, progress);
             return card;
           })
           .catch((error) => {
             console.error(error);
             this.loadedImages++;
-            this.updateLoadingStatus();
+            const progress = (this.loadedImages / this.totalImages) * 100;
+            this.updateLoadingStatus(`🖼️ 이미지 로드 중... (${this.loadedImages}/${this.totalImages})`, progress);
             return null;
           })
       );
@@ -695,6 +744,9 @@ class ImageBoard {
       this.msnry.appended(validCards);
       this.msnry.layout();
     }
+
+    // 완료 상태
+    this.updateLoadingStatus("로딩 완료", 100, true);
   }
 
   /**
@@ -707,6 +759,7 @@ class ImageBoard {
     }
     this.totalImages = 0;
     this.loadedImages = 0;
+    // 토스트 숨김 (메시지 없이 호출)
     this.updateLoadingStatus();
   }
 }
