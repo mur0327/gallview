@@ -34,9 +34,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     loadBtn.disabled = false;
     setStatus("갤러리가 감지되었습니다.", "success");
 
-    // DCBest 감지 시 UI 표시
+    // DCBest 감지 시 UI 처리
     if (id === "dcbest") {
       document.getElementById("dcbest-options").style.display = "block";
+      // dcbest는 이미 베스트 게시글이므로 개념글만 필터 비활성화
+      document.getElementById("recommend-only").checked = false;
+      document.getElementById("recommend-only").disabled = true;
+      document.querySelector(".recommend-checkbox").classList.add("disabled");
     }
   } else {
     siteBadge.textContent = "지원하지 않는 페이지";

@@ -240,12 +240,23 @@ class ImageBoard {
 
   /**
    * 로딩 상태 업데이트
+   * @param {string} message - 커스텀 메시지 (없으면 진행률 표시)
    */
-  updateLoadingStatus() {
+  updateLoadingStatus(message = null) {
     const statusEl = document.getElementById("loading-status");
     const progressContainer = document.getElementById("progress-container");
     const progressBar = document.getElementById("progress-bar");
 
+    // 커스텀 메시지가 있으면 표시 (수집 단계)
+    if (message) {
+      statusEl.style.display = "block";
+      statusEl.textContent = message;
+      progressContainer.classList.remove("show");
+      progressBar.style.width = "0%";
+      return;
+    }
+
+    // 이미지 로딩 진행률 표시
     if (this.totalImages > 0) {
       statusEl.style.display = "block";
       statusEl.textContent = `총 ${this.totalImages}개 중 ${this.loadedImages}개 로드 완료`;
@@ -287,6 +298,8 @@ class ImageBoard {
     }
     console.log("");
 
+    // 즉시 로딩 상태 표시
+    this.updateLoadingStatus("🔍 게시글 목록 수집 중...");
     this.clearBoard();
 
     try {
@@ -460,6 +473,8 @@ class ImageBoard {
     }
 
     console.log("가져온 게시글 목록:", allArticles);
+    console.log("");
+
     return allArticles;
   }
 
@@ -526,7 +541,8 @@ class ImageBoard {
       );
 
       chunkResults.forEach((result) => {
-        console.log(`📄 ${result.title} (${result.mediaList.length}개)`, result.url);
+        console.log(`📄 ${result.title} (${result.mediaList.length}개)`);
+        console.log(result.url);
       });
 
       results.push(...chunkResults);
@@ -540,6 +556,9 @@ class ImageBoard {
    */
   async fetchImageBoardData(galleryId, articleCount, startPage) {
     const articleList = await this.getArticleList(galleryId, articleCount, startPage);
+
+    // 이미지 URL 수집 단계 표시
+    this.updateLoadingStatus(`📷 ${articleList.length}개 게시글에서 이미지 수집 중...`);
     const imgBoardList = await this.getMediaList(articleList);
 
     const totalMedia = imgBoardList.reduce((sum, article) => sum + article.mediaList.length, 0);
@@ -555,10 +574,35 @@ class ImageBoard {
 
   /**
    * 이미지 Blob 다운로드
+   * - 헤더 응답까지 10초 타임아웃 적용
+   * - 실패 시 최대 3회 재시도 (지수 백오프: 0.5초 → 1초 → 2초)
+   * - 본문(blob) 다운로드는 시간 제한 없음
    */
-  async fetchImageBlob(imageUrl) {
-    const res = await fetch(imageUrl);
-    return res.blob();
+  async fetchImageBlob(imageUrl, retries = 3, timeout = 10000) {
+    for (let i = 0; i < retries; i++) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+      try {
+        const res = await fetch(imageUrl, { signal: controller.signal });
+        clearTimeout(timeoutId);
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return await res.blob();
+      } catch (error) {
+        clearTimeout(timeoutId);
+        const isLastAttempt = i === retries - 1;
+
+        if (error.name === "AbortError") {
+          console.warn(`⏱️ 타임아웃 (${i + 1}/${retries}): ${imageUrl}`);
+        } else {
+          console.warn(`⚠️ 이미지 로드 실패 (${i + 1}/${retries}): ${error.message}`);
+        }
+
+        if (isLastAttempt) throw error;
+        await new Promise((resolve) => setTimeout(resolve, 500 * Math.pow(2, i)));
+      }
+    }
   }
 
   /**
