@@ -9,9 +9,9 @@ const CONFIG = {
         dcbest: ".ub-content.us-post.thum .gall_tit.ub-word a:not(.reply_numbox)",
         // 기본: 이미지 게시글 + 개념글 모두 포함
         gallery:
-          '.ub-content.us-post[data-type="icon_pic"] .gall_tit.ub-word a:not(.reply_numbox), .ub-content.us-post[data-type="icon_recomimg"] .gall_tit.ub-word a:not(.reply_numbox)',
+          '.ub-content.us-post[data-type="icon_pic"] .gall_tit.ub-word a:not(.reply_numbox), .ub-content.us-post[data-type^="icon_recom"] .gall_tit.ub-word a:not(.reply_numbox)',
         // 개념글만
-        recommend: '.ub-content.us-post[data-type="icon_recomimg"] .gall_tit.ub-word a:not(.reply_numbox)',
+        recommend: '.ub-content.us-post[data-type^="icon_recom"] .gall_tit.ub-word a:not(.reply_numbox)',
       },
       media: [
         {
