@@ -240,9 +240,11 @@ class ImageBoard {
 
   /**
    * 프로그레스 토스트 생성/가져오기
+   * @returns {{ toast: HTMLElement, isNew: boolean }}
    */
   getProgressToast() {
     let toast = document.querySelector(".progress-toast");
+    let isNew = false;
     if (!toast) {
       toast = document.createElement("div");
       toast.className = "progress-toast";
@@ -254,8 +256,9 @@ class ImageBoard {
         <div class="progress-toast-bar"></div>
       `;
       document.body.appendChild(toast);
+      isNew = true;
     }
-    return toast;
+    return { toast, isNew };
   }
 
   /**
@@ -265,7 +268,7 @@ class ImageBoard {
    * @param {boolean} isComplete - 완료 상태 여부
    */
   updateLoadingStatus(message = null, progress = null, isComplete = false) {
-    const toast = this.getProgressToast();
+    const { toast, isNew } = this.getProgressToast();
     const textEl = toast.querySelector(".progress-text");
     const barEl = toast.querySelector(".progress-toast-bar");
     const spinnerEl = toast.querySelector(".spinner");
@@ -276,8 +279,7 @@ class ImageBoard {
       return;
     }
 
-    // 토스트 표시
-    toast.classList.add("show");
+    // 토스트 내용 설정
     textEl.textContent = message;
 
     // 완료 상태
@@ -315,6 +317,18 @@ class ImageBoard {
       barEl.style.width = `${progress}%`;
     } else {
       barEl.style.width = "0%";
+    }
+
+    // 토스트 표시 - 새로 생성된 경우 rAF로 다음 프레임에서 show 추가
+    if (isNew) {
+      // 브라우저가 초기 상태(translateX 120%)를 렌더링한 후 show 클래스 추가
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          toast.classList.add("show");
+        });
+      });
+    } else {
+      toast.classList.add("show");
     }
   }
 
