@@ -515,6 +515,7 @@ class ImageBoard {
         const remaining = targetCount - allArticles.length;
         allArticles.push(...pageArticles.slice(0, remaining));
         console.log(`페이지 ${currentPage}: ${pageArticles.length}개 발견, 총 ${allArticles.length}/${targetCount}개`);
+        console.log("");
       }
 
       currentPage++;
@@ -523,9 +524,6 @@ class ImageBoard {
     if (allArticles.length === 0) {
       throw new Error("이미지가 있는 게시글을 찾을 수 없습니다.");
     }
-
-    console.log("가져온 게시글 목록:", allArticles);
-    console.log("");
 
     return allArticles;
   }
@@ -594,11 +592,7 @@ class ImageBoard {
         })
       );
 
-      chunkResults.forEach((result) => {
-        processedArticles++;
-        console.log(`📄 ${result.title} (${result.mediaList.length}개)`);
-        console.log(result.url);
-      });
+      processedArticles += chunkResults.length;
 
       // 진행률 업데이트
       const progress = (processedArticles / totalArticles) * 100;
@@ -632,11 +626,11 @@ class ImageBoard {
 
   /**
    * 이미지 Blob 다운로드
-   * - 헤더 응답까지 10초 타임아웃 적용
+   * - 헤더 응답까지 30초 타임아웃 적용
    * - 실패 시 최대 3회 재시도 (지수 백오프: 0.5초 → 1초 → 2초)
    * - 본문(blob) 다운로드는 시간 제한 없음
    */
-  async fetchImageBlob(imageUrl, retries = 3, timeout = 10000) {
+  async fetchImageBlob(imageUrl, retries = 3, timeout = 30000) {
     for (let i = 0; i < retries; i++) {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeout);
@@ -646,7 +640,8 @@ class ImageBoard {
         clearTimeout(timeoutId);
 
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return await res.blob();
+        const blob = await res.blob();
+        return { blob, size: blob.size };
       } catch (error) {
         clearTimeout(timeoutId);
         const isLastAttempt = i === retries - 1;
@@ -667,7 +662,7 @@ class ImageBoard {
    * 이미지 카드 생성
    */
   async createImageCard(article, image) {
-    const blob = await this.fetchImageBlob(image.url);
+    const { blob, size } = await this.fetchImageBlob(image.url);
     const objectUrl = URL.createObjectURL(blob);
 
     return new Promise((resolve, reject) => {
@@ -692,7 +687,7 @@ class ImageBoard {
         container.appendChild(overlay);
         anchor.appendChild(container);
         URL.revokeObjectURL(imgElement.src);
-        resolve(anchor);
+        resolve({ card: anchor, size });
       };
 
       imgElement.onerror = () => {
@@ -721,6 +716,9 @@ class ImageBoard {
     // 초기 상태 표시
     this.updateLoadingStatus(`🖼️ 이미지 로드 중... (0/${this.totalImages})`, 0);
 
+    // 게시글별 이미지 크기 로그를 위한 Map
+    const articleSizeMap = new Map();
+
     const allImages = [];
     imgBoardList.forEach((article) => {
       article.mediaList.forEach((image) => {
@@ -730,20 +728,41 @@ class ImageBoard {
 
     const batches = this.chunkArray(allImages, CONFIG.app.concurrentRequests);
 
+    // 누적 용량 추적
+    let cumulativeSize = 0;
+
     for (const batch of batches) {
       const batchPromises = batch.map(({ article, image }) =>
         this.createImageCard(article, image)
-          .then((card) => {
+          .then(({ card, size }) => {
             this.loadedImages++;
+            cumulativeSize += size;
             const progress = (this.loadedImages / this.totalImages) * 100;
-            this.updateLoadingStatus(`🖼️ 이미지 로드 중... (${this.loadedImages}/${this.totalImages})`, progress);
+            this.updateLoadingStatus(
+              `🖼️ 이미지 로드 중... (${this.loadedImages}/${this.totalImages}) ${this.formatBytes(cumulativeSize)}`,
+              progress
+            );
+
+            // 게시글별 이미지 크기 수집
+            if (!articleSizeMap.has(article.title)) {
+              articleSizeMap.set(article.title, { url: article.url, images: [] });
+            }
+            articleSizeMap.get(article.title).images.push({
+              url: image.url,
+              size,
+              sizeFormatted: this.formatBytes(size),
+            });
+
             return card;
           })
           .catch((error) => {
             console.error(error);
             this.loadedImages++;
             const progress = (this.loadedImages / this.totalImages) * 100;
-            this.updateLoadingStatus(`🖼️ 이미지 로드 중... (${this.loadedImages}/${this.totalImages})`, progress);
+            this.updateLoadingStatus(
+              `🖼️ 이미지 로드 중... (${this.loadedImages}/${this.totalImages}) ${this.formatBytes(cumulativeSize)}`,
+              progress
+            );
             return null;
           })
       );
@@ -759,8 +778,34 @@ class ImageBoard {
       this.msnry.layout();
     }
 
+    // 게시글별 이미지 크기 로그 출력
+    console.log("%c📦 이미지 용량 상세", "color: #E91E63; font-weight: bold;");
+    let totalSize = 0;
+    articleSizeMap.forEach((data, title) => {
+      const articleTotal = data.images.reduce((sum, img) => sum + img.size, 0);
+      totalSize += articleTotal;
+      console.groupCollapsed(`📄 ${title} (${data.images.length}개, ${this.formatBytes(articleTotal)})`);
+      console.log(`URL: ${data.url}`);
+      data.images.forEach((img, idx) => {
+        console.log(`  ${idx + 1}. ${img.sizeFormatted}`);
+      });
+      console.groupEnd();
+    });
+    console.log(`%c📊 총 용량: ${this.formatBytes(totalSize)}`, "color: #4CAF50; font-weight: bold;");
+
     // 완료 상태
-    this.updateLoadingStatus("로딩 완료", 100, true);
+    this.updateLoadingStatus(`로딩 완료 (${this.formatBytes(cumulativeSize)})`, 100, true);
+  }
+
+  /**
+   * 바이트를 읽기 쉬운 형식으로 변환
+   */
+  formatBytes(bytes) {
+    if (bytes === 0) return "0 B";
+    const k = 1024;
+    const sizes = ["B", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   }
 
   /**
