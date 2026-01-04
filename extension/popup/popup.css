@@ -242,7 +242,6 @@ select:disabled {
 .dcbest-checkboxes {
   display: flex;
   flex-direction: column;
-  gap: 6px;
 }
 
 .dcbest-checkboxes label {
@@ -252,6 +251,14 @@ select:disabled {
   font-size: 0.8125rem;
   color: var(--text-primary);
   cursor: pointer;
+  padding: 6px 8px;
+  margin: 0 -8px;
+  border-radius: 6px;
+  transition: background-color 0.15s ease;
+}
+
+.dcbest-checkboxes label:hover {
+  background-color: var(--bg-primary);
 }
 
 .dcbest-checkboxes input[type="checkbox"] {
